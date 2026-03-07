@@ -12,7 +12,6 @@ import Footer from '@/components/Footer'
 import { useTranslation } from 'react-i18next'
 import { CompactedMonitorStateWrapper, getFromStore } from '@/worker/src/store'
 
-export const runtime = 'experimental-edge'
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home({

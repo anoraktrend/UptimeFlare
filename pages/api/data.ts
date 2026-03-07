@@ -2,7 +2,6 @@ import { maintenances, workerConfig } from '@/uptime.config'
 import { NextRequest } from 'next/server'
 import { CompactedMonitorStateWrapper, getFromStore } from '@/worker/src/store'
 
-export const runtime = 'edge'
 
 const headers = {
   'Content-Type': 'application/json',

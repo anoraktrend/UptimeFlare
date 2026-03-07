@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 import { CompactedMonitorStateWrapper, getFromStore } from '@/worker/src/store'
 
-export const runtime = 'edge'
 
 type BadgePayload = {
   schemaVersion: 1

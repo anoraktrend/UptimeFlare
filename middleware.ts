@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { workerConfig } from './uptime.config'
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const passwordProtection = workerConfig.passwordProtection
   if (passwordProtection) {
     const authHeader = request.headers.get('Authorization')

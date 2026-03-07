@@ -1,8 +1,13 @@
+#:schema node_modules/wrangler/config-schema.json
 name = "status"
-compatibility_date = "2025-04-02"
+main = ".open-next/worker.js"
+compatibility_date = "2024-12-30"
 compatibility_flags = [ "nodejs_compat" ]
+
 [assets]
-directory = "./.dist"
+directory = ".open-next/assets"
+binding = "ASSETS"
+
 [[d1_databases]]
 binding = "UPTIMEFLARE_D1"
 database_name = "uptimeflare_d1"
