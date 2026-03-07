@@ -6,7 +6,7 @@
     "dev": "next dev",
     "preview": "NODE_OPTIONS='--no-deprecation' opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "NODE_OPTIONS='--no-deprecation' opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "build": "NODE_OPTIONS='--no-deprecation' next build",
+    "build": "NODE_OPTIONS='--no-deprecation' opennextjs-cloudflare build",
     "start": "next start",
     "lint": "next lint"
   },
