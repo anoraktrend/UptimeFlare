@@ -1,6 +1,5 @@
-import { NextRequest } from 'next/server'
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { CompactedMonitorStateWrapper, getFromStore } from '@/worker/src/store'
-
 
 type BadgePayload = {
   schemaVersion: 1
@@ -8,11 +7,6 @@ type BadgePayload = {
   message: string
   color: string
   isError?: boolean
-}
-
-const jsonHeaders = {
-  'Content-Type': 'application/json',
-  'Cache-Control': 'no-store, max-age=0, must-revalidate',
 }
 
 function errorBadge(label: string, message: string): BadgePayload {
@@ -25,23 +19,21 @@ function errorBadge(label: string, message: string): BadgePayload {
   }
 }
 
-export default async function handler(req: NextRequest): Promise<Response> {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  res.setHeader('Cache-Control', 'no-store, max-age=0, must-revalidate')
+
   try {
-    const url = new URL(req.url)
+    const monitorId = req.query.id as string
+    const label = (req.query.label as string) ?? monitorId ?? 'UptimeFlare'
 
-    const monitorId = url.searchParams.get('id')
-    const label = url.searchParams.get('label') ?? monitorId ?? 'UptimeFlare'
-
-    const upMsg = url.searchParams.get('up') ?? 'UP'
-    const downMsg = url.searchParams.get('down') ?? 'DOWN'
-    const colorUp = url.searchParams.get('colorUp') ?? 'brightgreen'
-    const colorDown = url.searchParams.get('colorDown') ?? 'red'
+    const upMsg = (req.query.up as string) ?? 'UP'
+    const downMsg = (req.query.down as string) ?? 'DOWN'
+    const colorUp = (req.query.colorUp as string) ?? 'brightgreen'
+    const colorDown = (req.query.colorDown as string) ?? 'red'
 
     if (!monitorId) {
-      return new Response(JSON.stringify(errorBadge(label, 'no-monitor')), {
-        headers: jsonHeaders,
-        status: 400,
-      })
+      res.status(400).json(errorBadge(label, 'no-monitor'))
+      return
     }
 
     const compactedState = new CompactedMonitorStateWrapper(
@@ -61,14 +53,9 @@ export default async function handler(req: NextRequest): Promise<Response> {
       color: isUp ? colorUp : colorDown,
     }
 
-    return new Response(JSON.stringify(badge), {
-      headers: jsonHeaders,
-    })
-  } catch (err) {
+    res.status(200).json(badge)
+  } catch (err: any) {
     console.error('Error rendering badge API:', err)
-    return new Response(JSON.stringify(errorBadge('status', 'error')), {
-      headers: jsonHeaders,
-      status: 500,
-    })
+    res.status(500).json(errorBadge('status', 'error'))
   }
 }

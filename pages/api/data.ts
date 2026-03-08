@@ -1,54 +1,57 @@
 import { maintenances, workerConfig } from '@/uptime.config'
-import { NextRequest } from 'next/server'
+import type { NextApiRequest, NextApiResponse } from 'next'
 import { CompactedMonitorStateWrapper, getFromStore } from '@/worker/src/store'
 
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Add CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
 
-const headers = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-}
-
-export default async function handler(req: NextRequest): Promise<Response> {
-  const compactedState = new CompactedMonitorStateWrapper(
-    await getFromStore(process.env as any, 'state')
-  )
-
-  if (compactedState.data.lastUpdate === 0) {
-    return new Response(JSON.stringify({ error: 'No data available' }), {
-      status: 500,
-      headers,
-    })
+  if (req.method === 'OPTIONS') {
+    res.status(200).end()
+    return
   }
 
-  let monitors: any = {}
-
-  for (let monitor of workerConfig.monitors) {
-    const lastIncident = compactedState.getIncident(
-      monitor.id,
-      compactedState.incidentLen(monitor.id) - 1
+  try {
+    const compactedState = new CompactedMonitorStateWrapper(
+      await getFromStore(process.env as any, 'state')
     )
 
-    const isUp = lastIncident?.end !== null
-    const latency = compactedState.getLastLatency(monitor.id)
-    monitors[monitor.id] = {
-      up: isUp,
-      latency: latency.ping,
-      location: latency.loc,
-      message: isUp ? 'OK' : lastIncident?.error[lastIncident.error.length - 1],
+    if (compactedState.data.lastUpdate === 0) {
+      res.status(500).json({ error: 'No data available' })
+      return
     }
-  }
 
-  let ret = {
-    up: compactedState.data.overallUp,
-    down: compactedState.data.overallDown,
-    updatedAt: compactedState.data.lastUpdate,
-    monitors,
-    maintenances,
-  }
+    let monitors: any = {}
 
-  return new Response(JSON.stringify(ret), {
-    headers,
-  })
+    for (let monitor of workerConfig.monitors) {
+      const lastIncident = compactedState.getIncident(
+        monitor.id,
+        compactedState.incidentLen(monitor.id) - 1
+      )
+
+      const isUp = lastIncident?.end !== null
+      const latency = compactedState.getLastLatency(monitor.id)
+      monitors[monitor.id] = {
+        up: isUp,
+        latency: latency.ping,
+        location: latency.loc,
+        message: isUp ? 'OK' : lastIncident?.error[lastIncident.error.length - 1],
+      }
+    }
+
+    let ret = {
+      up: compactedState.data.overallUp,
+      down: compactedState.data.overallDown,
+      updatedAt: compactedState.data.lastUpdate,
+      monitors,
+      maintenances,
+    }
+
+    res.status(200).json(ret)
+  } catch (err: any) {
+    console.error('Error in data API:', err)
+    res.status(500).json({ error: 'Internal Server Error', message: err.message })
+  }
 }

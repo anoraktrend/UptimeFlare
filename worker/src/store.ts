@@ -7,9 +7,18 @@ import {
 } from '../../types/config'
 
 export async function getFromStore(env: Env, key: string): Promise<string | null> {
-  const stmt = env.UPTIMEFLARE_D1.prepare('SELECT value FROM uptimeflare WHERE key = ?')
-  const result = await stmt.bind(key).first<{ value: string }>()
-  return result?.value || null
+  if (!env.UPTIMEFLARE_D1) {
+    console.error('UPTIMEFLARE_D1 binding is missing in environment. Available keys:', Object.keys(env))
+    return null
+  }
+  try {
+    const stmt = env.UPTIMEFLARE_D1.prepare('SELECT value FROM uptimeflare WHERE key = ?')
+    const result = await stmt.bind(key).first<{ value: string }>()
+    return result?.value || null
+  } catch (err) {
+    console.error('Error reading from D1:', err)
+    return null
+  }
 }
 
 export async function setToStore(env: Env, key: string, value: string): Promise<void> {
