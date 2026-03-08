@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { CompactedMonitorStateWrapper, getFromStore } from '@/worker/src/store'
+import { getCloudflareContext } from '@opennextjs/cloudflare'
 
 type BadgePayload = {
   schemaVersion: 1
@@ -23,6 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   res.setHeader('Cache-Control', 'no-store, max-age=0, must-revalidate')
 
   try {
+    const { env } = getCloudflareContext()
     const monitorId = req.query.id as string
     const label = (req.query.label as string) ?? monitorId ?? 'UptimeFlare'
 
@@ -37,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const compactedState = new CompactedMonitorStateWrapper(
-      await getFromStore(process.env as any, 'state')
+      await getFromStore(env as any, 'state')
     )
 
     const lastIncident = compactedState.getIncident(

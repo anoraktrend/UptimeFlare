@@ -1,6 +1,7 @@
 import { maintenances, workerConfig } from '@/uptime.config'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { CompactedMonitorStateWrapper, getFromStore } from '@/worker/src/store'
+import { getCloudflareContext } from '@opennextjs/cloudflare'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Add CORS headers
@@ -14,8 +15,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    const { env } = getCloudflareContext()
     const compactedState = new CompactedMonitorStateWrapper(
-      await getFromStore(process.env as any, 'state')
+      await getFromStore(env as any, 'state')
     )
 
     if (compactedState.data.lastUpdate === 0) {
