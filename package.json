@@ -6,7 +6,8 @@
     "dev": "next dev",
     "preview": "npm run build && opennextjs-cloudflare preview",
     "deploy": "npm run build && opennextjs-cloudflare deploy",
-    "build": "next build",
+    "build": "npm run build:next && opennextjs-cloudflare build --skipNextBuild",
+    "build:next": "NODE_OPTIONS='--no-deprecation' next build --webpack",
     "start": "next start",
     "lint": "next lint"
   },
